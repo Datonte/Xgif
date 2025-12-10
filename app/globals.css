@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #000000;
+    --foreground: #ffffff;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Animation preview keyframes for GIF editor */
+@keyframes zoomPreview {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+@keyframes panPreview {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(10%) translateY(-5%); }
+  50% { transform: translateX(-10%) translateY(5%); }
+  75% { transform: translateX(5%) translateY(-10%); }
+}
+
+@keyframes fadePreview {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes rotatePreview {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulsePreview {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes bouncePreview {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15%); }
+}
+
+@keyframes shakePreview {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  10% { transform: translateX(-2%) translateY(-1%); }
+  20% { transform: translateX(2%) translateY(1%); }
+  30% { transform: translateX(-1%) translateY(2%); }
+  40% { transform: translateX(1%) translateY(-2%); }
+  50% { transform: translateX(-2%) translateY(1%); }
+  60% { transform: translateX(2%) translateY(-1%); }
+  70% { transform: translateX(-1%) translateY(-2%); }
+  80% { transform: translateX(1%) translateY(2%); }
+  90% { transform: translateX(-2%) translateY(0); }
+}
+

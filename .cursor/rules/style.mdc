@@ -1,0 +1,22 @@
+---
+alwaysApply: true
+---
+The website must automatically generate a unique, beautiful layout and colour theme on every load. When an image is provided, all visual elements — including the layout, colour scheme, cursor, and overall styling — must adapt to match that image.
+
+The website must include:
+
+Always make sure the website is extremely Interactive and creative
+
+It must be desktop/mobile/Tablet responsive 
+
+A theme toggle button for light mode and dark mode.
+
+A Twitter button and a Dexscreener button.
+
+A favicon generated from the specified main picture.
+
+A visible contract address placeholder that users can easily copy.
+
+The main provided image displayed on the website, and if multiple images are supplied, they must be incorporated into the design.
+
+One image will be marked as the primary image, and this image must be used for both the logo and the favicon.”

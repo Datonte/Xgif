@@ -1,0 +1,4 @@
+---
+alwaysApply: true
+---
+make sure each project is always ready to be deployed on vercel 
