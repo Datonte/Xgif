@@ -20,7 +20,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (using npm install for better compatibility)
-RUN npm install
+RUN npm install --include=optional
+
+# Rebuild sharp for the correct platform
+RUN npm rebuild sharp
 
 # Copy application files
 COPY . .
