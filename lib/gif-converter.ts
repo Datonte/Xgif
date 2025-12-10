@@ -5,7 +5,6 @@ import { promisify } from 'util';
 const writeFileAsync = promisify(writeFile);
 const mkdirAsync = promisify(mkdir);
 import { join } from 'path';
-import GIFEncoder from 'gifencoder';
 import { PNG } from 'pngjs';
 import { createWriteStream } from 'fs';
 
@@ -218,23 +217,39 @@ export async function convertImageToGIF(
       };
     }
 
-    // Create animated GIF with multiple frames using gifencoder
+    // Create animated GIF with multiple frames
     const totalFrames = Math.max(2, Math.min(animationSettings.duration * animationSettings.frameRate, 60));
     const frameDelay = Math.round(1000 / animationSettings.frameRate);
+    const loopCount = animationSettings.loopCount === 0 ? 0 : animationSettings.loopCount;
 
-    // Create GIF encoder
-    const encoder = new GIFEncoder(width, height);
-    encoder.start();
-    encoder.setRepeat(animationSettings.loopCount === 0 ? 0 : animationSettings.loopCount);
-    encoder.setDelay(frameDelay);
-    encoder.setQuality(10);
+    // Try to use gifencoder if available (requires canvas)
+    let useGifEncoder = false;
+    let GIFEncoder: any = null;
+    
+    try {
+      GIFEncoder = require('gifencoder');
+      // Test if canvas is available by trying to create an encoder
+      const testEncoder = new GIFEncoder(1, 1);
+      useGifEncoder = true;
+    } catch (e) {
+      console.warn('GIFEncoder not available (canvas missing), using Sharp fallback');
+      useGifEncoder = false;
+    }
 
-    const stream = encoder.createReadStream();
-    const writeStream = createWriteStream(gifPath);
-    stream.pipe(writeStream);
+    if (useGifEncoder && GIFEncoder) {
+      // Use gifencoder for animated GIFs
+      const encoder = new GIFEncoder(width, height);
+      encoder.start();
+      encoder.setRepeat(loopCount);
+      encoder.setDelay(frameDelay);
+      encoder.setQuality(10);
 
-    // Generate and add frames
-    for (let frame = 0; frame < totalFrames; frame++) {
+      const stream = encoder.createReadStream();
+      const writeStream = createWriteStream(gifPath);
+      stream.pipe(writeStream);
+
+      // Generate and add frames
+      for (let frame = 0; frame < totalFrames; frame++) {
     const progress = frame / (totalFrames - 1);
     let frameImage = sharp(imageBuffer);
 
@@ -413,22 +428,67 @@ export async function convertImageToGIF(
         }
       }
 
-      // Convert frame to PNG buffer for gifencoder
-      const framePngBuffer = await frameImage.png().toBuffer();
-      const png = PNG.sync.read(framePngBuffer);
+        // Convert frame to PNG buffer for gifencoder
+        const framePngBuffer = await frameImage.png().toBuffer();
+        const png = PNG.sync.read(framePngBuffer);
+        
+        // Add frame to encoder
+        encoder.addFrame(png.data);
+      }
+
+      // Finish encoding
+      encoder.finish();
+
+      // Wait for stream to finish
+      await new Promise<void>((resolve, reject) => {
+        writeStream.on('finish', () => resolve());
+        writeStream.on('error', reject);
+      });
+    } else {
+      // Fallback: Create a static GIF with the first frame (animated GIFs require canvas)
+      // For Vercel deployment, we'll create a static GIF as fallback
+      console.warn('Creating static GIF (animated GIFs require canvas which is not available on Vercel)');
+      const progress = 0;
+      let frameImage = sharp(imageBuffer);
       
-      // Add frame to encoder
-      encoder.addFrame(png.data);
+      // Apply animation transformation to first frame
+      switch (animationSettings.type) {
+        case 'zoom':
+          const zoomScale = 1 + Math.sin(progress * Math.PI * 2) * 0.2;
+          const zoomedWidth = Math.max(width, Math.round(width * zoomScale));
+          const zoomedHeight = Math.max(height, Math.round(height * zoomScale));
+          frameImage = frameImage
+            .resize(zoomedWidth, zoomedHeight, { fit: 'cover', position: 'center' })
+            .resize(width, height, { fit: 'cover' });
+          break;
+        // Add other animation types as needed for the static fallback
+        default:
+          frameImage = frameImage.resize(width, height, { fit: 'cover' });
+      }
+
+      // Add text overlays if any
+      if (textOverlays.length > 0) {
+        const composites = [];
+        for (const text of textOverlays) {
+          if (!text.text || text.text.trim() === '') continue;
+          const textSVG = createTextSVG(text, width, height, 0);
+          try {
+            const textBuffer = await sharp(Buffer.from(textSVG), { density: 300 })
+              .resize(width, height, { fit: 'fill' })
+              .png()
+              .toBuffer();
+            composites.push({ input: textBuffer, blend: 'over' as const });
+          } catch (error) {
+            console.error('Error creating text overlay:', error);
+          }
+        }
+        if (composites.length > 0) {
+          frameImage = frameImage.composite(composites);
+        }
+      }
+
+      await frameImage.gif().toFile(gifPath);
     }
-
-    // Finish encoding
-    encoder.finish();
-
-    // Wait for stream to finish
-    await new Promise<void>((resolve, reject) => {
-      writeStream.on('finish', () => resolve());
-      writeStream.on('error', reject);
-    });
 
     const finalMetadata = await sharp(gifPath).metadata().catch(() => ({ size: 0 }));
 
