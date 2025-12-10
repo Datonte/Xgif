@@ -349,13 +349,17 @@ export default function GIFEditor({ imagePreview, onSettingsChange }: GIFEditorP
                             color: text.color,
                             textAlign: text.textAlign,
                             fontWeight: 'bold',
-                            textShadow: '3px 3px 6px rgba(0, 0, 0, 1), -1px -1px 3px rgba(0, 0, 0, 1)',
+                            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.9), 0px 0px 8px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.9)',
+                            WebkitTextStroke: '0.5px rgba(0, 0, 0, 0.8)',
+                            paintOrder: 'stroke fill',
                             whiteSpace: 'pre-wrap',
                             wordWrap: 'break-word',
                             padding: '4px',
                             minHeight: `${text.fontSize}px`,
                             lineHeight: '1.3',
                             display: 'block',
+                            position: 'relative',
+                            zIndex: 1,
                           }}
                         >
                           {text.text || 'Your text here'}
@@ -519,14 +523,31 @@ export default function GIFEditor({ imagePreview, onSettingsChange }: GIFEditorP
 
             <div>
               <label className="block text-sm font-medium mb-2">Loop Count</label>
+              <div className="flex items-center gap-3 mb-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={animation.loopCount === 0}
+                    onChange={(e) => {
+                      setAnimation({ ...animation, loopCount: e.target.checked ? 0 : 1 });
+                    }}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Infinite Loop</span>
+                </label>
+              </div>
               <input
                 type="number"
                 min="0"
-                value={animation.loopCount}
+                value={animation.loopCount === 0 ? '' : animation.loopCount}
                 onChange={(e) => setAnimation({ ...animation, loopCount: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-                placeholder="0 = infinite"
+                disabled={animation.loopCount === 0}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="Enter number of loops"
               />
+              {animation.loopCount === 0 && (
+                <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">∞ Infinite loop enabled</p>
+              )}
             </div>
           </div>
         </div>

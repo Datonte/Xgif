@@ -37,7 +37,8 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
       <WalletProvider 
         wallets={wallets} 
         autoConnect={true}
-        onError={(error) => {
+        localStorageKey="walletName"
+        onError={(error: Error) => {
           console.error('Wallet error:', error);
         }}
       >
