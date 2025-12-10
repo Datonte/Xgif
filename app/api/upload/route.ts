@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { convertImageToGIF } from '@/lib/gif-converter';
 import { createGIF } from '@/lib/db';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();

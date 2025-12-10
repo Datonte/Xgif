@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
+import { promises as fs } from 'fs';
 import { join } from 'path';
 import { getGIFById, updateGIF } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const walletAddress = request.headers.get('x-wallet-address');
@@ -17,7 +17,8 @@ export async function GET(
       );
     }
 
-    const gifId = params.id;
+    const { id } = await params;
+    const gifId = id;
 
     // Get GIF from database
     let gif = await getGIFById(gifId);
@@ -54,7 +55,7 @@ export async function GET(
     const fullPath = join(process.cwd(), 'public', fileSystemPath);
     
     try {
-      const fileBuffer = await readFile(fullPath);
+      const fileBuffer = await fs.readFile(fullPath);
       
       return new NextResponse(fileBuffer, {
         headers: {
@@ -76,7 +77,7 @@ export async function GET(
       
       for (const altPath of alternativePaths) {
         try {
-          const fileBuffer = await readFile(altPath);
+          const fileBuffer = await fs.readFile(altPath);
           return new NextResponse(fileBuffer, {
             headers: {
               'Content-Type': 'image/gif',

@@ -11,7 +11,7 @@ export async function verifyWalletSignature(
     const messageBytes = new TextEncoder().encode(message);
     
     // Verify the signature
-    const isValid = nacl.sign.detached.verify(
+    const isValid = (nacl.sign as any).detached.verify(
       messageBytes,
       signature,
       publicKeyObj.toBytes()
